@@ -1,6 +1,8 @@
-import gleam/dynamic.{type Dynamic, field}
+import gleam/dynamic.{type Dynamic}
+import gleam/int
 import gleam/list
-
+import gleam/result
+import gleam/string
 
 type Decoder(a) =
   fn() -> #(fn() -> a, fn(Dynamic) -> Result(a, dynamic.DecodeErrors))
@@ -19,6 +21,7 @@ pub fn parameter(
     let #(default, decoder) = decoder()
 
     let merge_errors = fn(errors) {
+      let errors = errors |> list.map(push_path(_, name))
       let #(_, decode) = next(default())()
       case decode(data) {
         Ok(_) -> Error(errors)
@@ -27,15 +30,32 @@ pub fn parameter(
     }
 
     case dynamic.field(name, dynamic.dynamic)(data) {
-      Ok(maybe_value) -> case decoder(maybe_value) {
-        Ok(value) -> next(value)().1(data)
-        Error(errors) -> merge_errors(errors)
-      }
+      Ok(maybe_value) ->
+        case decoder(maybe_value) {
+          Ok(value) -> next(value)().1(data)
+          Error(errors) -> merge_errors(errors)
+        }
       Error(errors) -> Error(errors)
     }
   }
 
   fn() { #(default_fn, decoder_fn) }
+}
+
+fn push_path(error: dynamic.DecodeError, name: t) -> dynamic.DecodeError {
+  let name = dynamic.from(name)
+  let decoder =
+    dynamic.any([
+      dynamic.string,
+      fn(x) { result.map(dynamic.int(x), int.to_string) },
+    ])
+  let name = case decoder(name) {
+    Ok(name) -> name
+    Error(_) ->
+      ["<", dynamic.classify(name), ">"]
+      |> string.join("")
+  }
+  dynamic.DecodeError(..error, path: [name, ..error.path])
 }
 
 pub fn decoded(a) {
@@ -53,7 +73,6 @@ fn from_dynamic_decoder(
   fn() { #(default, decoder) }
 }
 
-
 pub fn string() {
   from_dynamic_decoder(dynamic.string, "")
 }
@@ -66,7 +85,10 @@ pub fn float() {
   from_dynamic_decoder(dynamic.float, 0.0)
 }
 
-pub fn decode(decoder: Decoder(a), data: Dynamic) -> Result(a, dynamic.DecodeErrors) {
+pub fn decode(
+  decoder: Decoder(a),
+  data: Dynamic,
+) -> Result(a, dynamic.DecodeErrors) {
   let #(_, decode) = decoder()
   decode(data)
 }
