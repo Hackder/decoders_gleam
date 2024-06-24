@@ -1,8 +1,7 @@
 import gleam/dict
-import gleam/dynamic.{type Dynamic, field}
+import gleam/dynamic.{type Dynamic}
 import gleam/io
 import gleam/list
-import dec
 
 pub type User {
   User(name: String, age: Int, height: Float)
@@ -142,8 +141,8 @@ const dyn_float = #(0.0, dynamic.float)
 pub fn decode_user_all_second_try(
   json: Dynamic,
 ) -> Result(User, List(dynamic.DecodeError)) {
-  json |>
-  {
+  json
+  |> {
     use name <- parameter_all2("name", dyn_string)
     use age <- parameter_all2("age", dyn_int)
     use height <- parameter_all2("height", dyn_float)
