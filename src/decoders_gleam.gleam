@@ -2,6 +2,7 @@ import gleam/dict
 import gleam/dynamic.{type Dynamic, field}
 import gleam/io
 import gleam/list
+import dec
 
 pub type User {
   User(name: String, age: Int, height: Float)

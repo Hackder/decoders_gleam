@@ -23,10 +23,10 @@ pub fn decoder_test() {
   let data =
     dynamic.from(
       dict.from_list([
-        #("name", dynamic.from(1)),
+        #("name", dynamic.from("Nubi")),
         #("email", dynamic.from("nubi@example.com")),
         #("is_admin", dynamic.from(False)),
-        #("is_confirmed", dynamic.from(1)),
+        #("is_confirmed", dynamic.from(True)),
         #("score", dynamic.from(180)),
       ]),
     )
@@ -34,7 +34,6 @@ pub fn decoder_test() {
   decode.into({
     use name <- decode.parameter
     use email <- decode.parameter
-    io.debug(email)
     use is_admin <- decode.parameter
     use is_confirmed <- decode.parameter
     use score <- decode.parameter
