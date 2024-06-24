@@ -1,8 +1,3 @@
-import dec
-import gleam/dict
-import gleam/dynamic
-import gleeunit/should
-
 //// Pros:
 //// - The decoder is defined in a single place
 //// - The decoder is composable
@@ -15,6 +10,11 @@ import gleeunit/should
 ////   (This is not the fastest)
 //// Ideas:
 //// - Use custom decoders and errors with the ability to add validation
+
+import dec
+import gleam/dict
+import gleam/dynamic
+import gleeunit/should
 
 pub type User {
   User(name: String, age: Int, height: Float, account: Account)
@@ -106,5 +106,34 @@ pub fn second_level_error_test() {
   |> dec.decode(data)
   |> should.equal(
     Error([dynamic.DecodeError("Int", "String", ["account", "id"])]),
+  )
+}
+
+pub fn multiple_errors_test() {
+  let data: dynamic.Dynamic =
+    dict.from_list([
+      #("name", dynamic.from("Alice")),
+      #("age", dynamic.from("")),
+      #("height", dynamic.from("")),
+      #(
+        "account",
+        dynamic.from(
+          dict.from_list([
+            #("id", dynamic.from("1")),
+            #("provider", dynamic.from("google")),
+          ]),
+        ),
+      ),
+    ])
+    |> dynamic.from
+
+  user_decoder()
+  |> dec.decode(data)
+  |> should.equal(
+    Error([
+      dynamic.DecodeError("Int", "String", ["age"]),
+      dynamic.DecodeError("Float", "String", ["height"]),
+      dynamic.DecodeError("Int", "String", ["account", "id"]),
+    ]),
   )
 }
