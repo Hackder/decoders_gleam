@@ -11,6 +11,10 @@ import gleeunit/should
 //// Cons:
 //// - The presence of default values may cause issues if any side effects
 ////   are present in the decoder function.
+//// - Perf. Decoders are probably gonna be ran a lot, so they should be fast.
+////   (This is not the fastest)
+//// Ideas:
+//// - Use custom decoders and errors with the ability to add validation
 
 pub type User {
   User(name: String, age: Int, height: Float, account: Account)
